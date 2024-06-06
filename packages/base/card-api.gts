@@ -53,6 +53,7 @@ import {
 } from '@cardstack/runtime-common';
 import type { ComponentLike } from '@glint/template';
 import { initSharedState } from './shared-state';
+import { tracked } from '@glimmer/tracking';
 
 export { primitive, isField, type BoxComponent };
 export const serialize = Symbol.for('cardstack-serialize');
@@ -329,6 +330,7 @@ export interface Field<
   ): Promise<
     BaseInstanceType<CardT> | BaseInstanceType<CardT>[] | undefined | void
   >;
+  newFieldMigration?: true;
 }
 
 function callSerializeHook(
@@ -1576,6 +1578,89 @@ export function containsMany<FieldT extends FieldDefConstructor>(
 }
 containsMany[fieldType] = 'contains-many' as FieldType;
 
+interface BabelDecoratorDescriptor {
+  configurable?: boolean;
+  enumerable?: boolean;
+  writable?: boolean;
+  get?(): any;
+  set?(v: any): void;
+  initializer?: null | (() => any);
+  value?: any;
+}
+
+type BabelDecorator = (
+  target: object,
+  prop: string | symbol,
+  desc: BabelDecoratorDescriptor,
+) => BabelDecoratorDescriptor | null | undefined | void;
+
+interface TrackedDescriptor<T> {
+  get(): T;
+  set(value: T): void;
+}
+
+function isTrackedDescriptor<T>(desc: any): desc is TrackedDescriptor<T> {
+  return Boolean(desc?.get && desc?.set);
+}
+
+export function newContains<FieldT extends FieldDefConstructor>(
+  field: FieldT,
+  options?: Options,
+): PropertyDecorator {
+  // our decorators are implemented by Babel, not TypeScript, so they have a
+  // different signature than Typescript thinks they do.
+  let decorator: BabelDecorator = function (
+    target,
+    key,
+    desc,
+  ): PropertyDescriptor {
+    if (typeof key !== 'string') {
+      throw new Error(`"contains" decorator only supports string field names`);
+    }
+    let isComputed = Boolean(desc.get);
+    let result: PropertyDescriptor;
+    let fieldInstance: Field = new Contains(
+      cardThunk(field),
+      isComputed
+        ? () => {
+            throw new Error(`todo: this will become just a boolean`);
+          }
+        : undefined,
+      key,
+      options?.description,
+      options?.isUsed,
+    );
+    if (isComputed) {
+      result = desc;
+    } else {
+      if (!desc.initializer) {
+        desc.initializer = function (this: BaseDef) {
+          return fieldInstance.emptyValue(this);
+        };
+      }
+
+      const trackedDesc = tracked(target, key, desc)!;
+
+      if (!isTrackedDescriptor(trackedDesc)) {
+        throw new Error(`bug: got unexpected result from @glimmer/tracking`);
+      }
+      result = {
+        get() {
+          return trackedDesc.get.call(this);
+        },
+        set(value) {
+          trackedDesc.set.call(this, value);
+        },
+      };
+    }
+    fieldInstance.newFieldMigration = true;
+    (result.get as any)[isField] = fieldInstance;
+    result.enumerable = true;
+    return result;
+  };
+  return decorator as unknown as PropertyDecorator;
+}
+
 export function contains<FieldT extends FieldDefConstructor>(
   field: FieldT,
   options?: Options,
@@ -2387,7 +2472,13 @@ function serializedGet<CardT extends BaseDefConstructor>(
       `tried to serializedGet field ${fieldName} which does not exist in card ${model.constructor.name}`,
     );
   }
-  return field.serialize(peekAtField(model, fieldName), doc, visited, opts);
+  let value: any;
+  if (field.newFieldMigration) {
+    value = (model as any)[fieldName];
+  } else {
+    value = peekAtField(model, fieldName);
+  }
+  return field.serialize(value, doc, visited, opts);
 }
 
 async function getDeserializedValue<CardT extends BaseDefConstructor>({
@@ -2765,7 +2856,11 @@ async function _updateFromSerialized<T extends BaseDefConstructor>(
       ) {
         applySubscribersToInstanceValue(instance, field, existingValue, value);
       }
-      deserialized.set(field.name as string, value);
+      if (field.newFieldMigration) {
+        (instance as any)[field.name] = value;
+      } else {
+        deserialized.set(field.name as string, value);
+      }
       logger.log(recompute(instance));
     }
     if (isCardInstance(instance) && resource.id != null) {

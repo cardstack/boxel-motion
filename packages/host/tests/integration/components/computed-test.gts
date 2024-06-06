@@ -8,6 +8,8 @@ import { Loader } from '@cardstack/runtime-common/loader';
 
 import type LoaderService from '@cardstack/host/services/loader-service';
 
+import type { BaseInstanceType } from 'https://cardstack.com/base/card-api';
+
 import {
   cleanWhiteSpace,
   testRealmURL,
@@ -29,8 +31,10 @@ import {
   recompute,
   linksTo,
   linksToMany,
+  newContains,
 } from '../../helpers/base-realm';
 import { renderCard } from '../../helpers/render-component';
+import { settled } from '@ember/test-helpers';
 
 let loader: Loader;
 
@@ -55,13 +59,19 @@ module('Integration | computeds', function (hooks) {
 
   test('can render a synchronous computed field', async function (assert) {
     class Person extends CardDef {
-      @field firstName = contains(StringField);
-      @field lastName = contains(StringField);
-      @field fullName = contains(StringField, {
-        computeVia: function (this: Person) {
-          return `${this.firstName} ${this.lastName}`;
-        },
-      });
+      @newContains(StringField) declare firstName: BaseInstanceType<
+        typeof StringField
+      >;
+
+      @newContains(StringField) declare lastName: BaseInstanceType<
+        typeof StringField
+      >;
+
+      @newContains(StringField)
+      get fullName(): BaseInstanceType<typeof StringField> {
+        return `${this.firstName} ${this.lastName}`;
+      }
+
       static isolated = class Isolated extends Component<typeof this> {
         <template>
           <@fields.fullName />
@@ -72,6 +82,9 @@ module('Integration | computeds', function (hooks) {
     let mango = new Person({ firstName: 'Mango', lastName: 'Abdel-Rahman' });
     let root = await renderCard(loader, mango, 'isolated');
     assert.strictEqual(root.textContent!.trim(), 'Mango Abdel-Rahman');
+    mango.lastName = 'Tango';
+    await settled();
+    assert.strictEqual(root.textContent!.trim(), 'Mango Tango');
   });
 
   test('can render a synchronous computed field (using a string in `computeVia`)', async function (assert) {
@@ -96,17 +109,16 @@ module('Integration | computeds', function (hooks) {
 
   test('can render a computed that consumes a nested property', async function (assert) {
     class Person extends FieldDef {
-      @field firstName = contains(StringField);
+      @newContains(StringField)
+      declare firstName: BaseInstanceType<typeof StringField>;
     }
 
     class Post extends CardDef {
-      @field title = contains(StringField);
-      @field author = contains(Person);
-      @field summary = contains(StringField, {
-        computeVia: function (this: Post) {
-          return `${this.title} by ${this.author.firstName}`;
-        },
-      });
+      @newContains(Person) declare author: Person;
+      @newContains(StringField)
+      get summary() {
+        return `${this.title} by ${this.author.firstName}`;
+      }
       static isolated = class Isolated extends Component<typeof this> {
         <template>
           <@fields.summary />
@@ -127,6 +139,9 @@ module('Integration | computeds', function (hooks) {
     });
     let root = await renderCard(loader, firstPost, 'isolated');
     assert.strictEqual(root.textContent!.trim(), 'First Post by Mango');
+    firstPost.author.firstName = 'Tango';
+    await settled();
+    assert.strictEqual(root.textContent!.trim(), 'First Post by Tango');
   });
 
   test('can render a computed that is a composite type', async function (assert) {
