@@ -395,7 +395,6 @@ module('Integration | operator-mode', function (hooks) {
             module: `${testRealmURL}pet`,
             name: 'Pet',
           },
-          isField: false,
         }),
         'Author/1.json': author1,
         'Author/2.json': new Author({ firstName: 'R2-D2' }),

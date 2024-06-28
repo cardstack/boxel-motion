@@ -30,6 +30,7 @@ import {
   linksToMany,
 } from '../../helpers/base-realm';
 import { renderCard } from '../../helpers/render-component';
+import { settled } from '@ember/test-helpers';
 
 let loader: Loader;
 
@@ -70,6 +71,9 @@ module('Integration | computeds', function (hooks) {
     let mango = new Person({ firstName: 'Mango', lastName: 'Abdel-Rahman' });
     let root = await renderCard(loader, mango, 'isolated');
     assert.strictEqual(root.textContent!.trim(), 'Mango Abdel-Rahman');
+    mango.firstName = 'Papaya';
+    await settled();
+    assert.strictEqual(root.textContent!.trim(), 'Papaya Abdel-Rahman');
   });
 
   test('can render a computed that consumes a nested property', async function (assert) {
