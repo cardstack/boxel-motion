@@ -104,7 +104,7 @@ async function processDecryptedEvent(
     return;
   }
 
-  let roomState = await MatrixService.getRoom(roomId);
+  let roomState = MatrixService.getRoom(roomId);
   // patch in any missing room events--this will support dealing with local
   // echoes, migrating older histories as well as handle any matrix syncing gaps
   // that might occur

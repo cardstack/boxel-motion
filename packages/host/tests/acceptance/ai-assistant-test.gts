@@ -36,7 +36,7 @@ async function selectCardFromCatalog(cardId: string) {
   await click('[data-test-card-catalog-go-button]');
 }
 
-async function assertMessages(
+function assertMessages(
   assert: Assert,
   messages: {
     from: string;

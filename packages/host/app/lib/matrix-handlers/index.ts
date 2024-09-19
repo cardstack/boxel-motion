@@ -123,8 +123,7 @@ export async function getRoomEvents(
     );
   }
   let room = context.getRoom(roomId);
-  let resolvedRoom = await room;
-  return resolvedRoom?.events ?? [];
+  return room?.events ?? [];
 }
 
 export async function getCommandResultEvents(
