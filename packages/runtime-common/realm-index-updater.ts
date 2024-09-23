@@ -1,6 +1,5 @@
 import { Memoize } from 'typescript-memoize';
 import {
-  IndexWriter,
   Deferred,
   logger,
   fetchUserPermissions,
@@ -12,6 +11,7 @@ import {
   type IncrementalArgs,
   type IncrementalResult,
 } from '.';
+import { IndexWriter } from './index-writer';
 import { Realm } from './realm';
 import { RealmPaths } from './paths';
 import { Loader } from './loader';

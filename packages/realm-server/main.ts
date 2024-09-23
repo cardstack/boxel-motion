@@ -1,10 +1,10 @@
 import './setup-logger'; // This should be first
 import {
-  Realm,
   VirtualNetwork,
   logger,
   RunnerOptionsManager,
 } from '@cardstack/runtime-common';
+import { Realm } from '@cardstack/runtime-common/realm';
 import { NodeAdapter } from './node-realm';
 import yargs from 'yargs';
 import { RealmServer } from './server';
