@@ -124,27 +124,31 @@ export class CatalogEntry extends CardDef {
     });
 
     <template>
-      <div class='container'>
-        <div class='header'>
-          <div class='header-icon-container'>
+      <article class='catalog-entry'>
+        <header class='header'>
+          <div class='box header-icon-container'>
             {{#if this.loadCardIcon.isRunning}}
-              <LoadingIndicator class='box header-icon-svg' />
+              <LoadingIndicator class='header-icon' />
             {{else}}
               {{#if this.icon}}
-                <this.icon class='box header-icon-svg' />
+                <this.icon class='header-icon' width='60' height='60' />
               {{else}}
-                <this.defaultIcon class='box header-icon-svg' />
+                <this.defaultIcon class='header-icon' width='60' height='60' />
               {{/if}}
             {{/if}}
           </div>
-          <div class='header-info-container'>
-            <div class='box'>
-              <h1 data-test-title><@fields.title /></h1>
-              <em data-test-description><@fields.description /></em>
-            </div>
+          <div class='box header-info-container'>
+            <h1 class='main-title header-info' data-test-title>
+              <@fields.title />
+            </h1>
+            {{#if @model.description.length}}
+              <p class='description header-info' data-test-description>
+                <@fields.description />
+              </p>
+            {{/if}}
           </div>
-        </div>
-        <div class='readme section'>
+        </header>
+        <section class='readme section'>
           <div class='row-header'>
             <BookOpenText />
             README
@@ -154,8 +158,8 @@ export class CatalogEntry extends CardDef {
               <@fields.readMe />
             </div>
           {{/if}}
-        </div>
-        <div class='examples section'>
+        </section>
+        <section class='examples section'>
           <div class='row-header'>
             <LayersSubtract />
             Examples
@@ -165,8 +169,8 @@ export class CatalogEntry extends CardDef {
           {{else}}
             <@fields.linkedExamples />
           {{/if}}
-        </div>
-        <div class='module section'>
+        </section>
+        <section class='module section'>
           <div class='row-header'>
             <GitBranch />
             Module</div>
@@ -192,39 +196,56 @@ export class CatalogEntry extends CardDef {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
+      </article>
       <style scoped>
-        .container {
+        .catalog-entry {
+          display: grid;
+          gap: var(--boxel-sp-lg);
+          padding: var(--boxel-sp);
           background-color: var(--boxel-200);
         }
         .box {
-          border: 2px solid var(--boxel-border-color);
-          border-radius: var(--boxel-border-radius-lg);
-          padding: var(--boxel-sp-xs);
           background-color: var(--boxel-light);
+          border-radius: var(--boxel-border-radius-lg);
+        }
+        .box:not(.header-info-container) {
+          padding: var(--boxel-sp-xs);
         }
         .header {
           display: flex;
           gap: var(--boxel-sp-sm);
         }
-        .section {
-          padding: var(--boxel-sp-sm);
-        }
         .header-icon-container {
-          padding: var(--boxel-sp-sm);
           flex-shrink: 0;
-        }
-        .header-icon-svg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           height: var(--boxel-icon-xxl);
           width: var(--boxel-icon-xxl);
-          border: 2px solid var(--boxel-border-color);
-          border-radius: var(--boxel-border-radius-lg);
         }
         .header-info-container {
-          padding: var(--boxel-sp-sm);
-          flex: 1;
+          flex-grow: 1;
+          display: grid;
+          align-items: center;
+          align-content: center;
         }
+        .header-info {
+          padding: var(--boxel-sp-xxxs) var(--boxel-sp-xs);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .main-title {
+          margin: 0;
+          font: 600 var(--boxel-font-med);
+          letter-spacing: var(--boxel-lsp-xs);
+        }
+        .description {
+          margin: 0;
+          border-top: var(--boxel-border);
+        }
+
         .row-header {
           display: inline-flex;
           align-items: center;

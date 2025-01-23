@@ -110,7 +110,7 @@ class BoxelSpecPreviewTitle extends GlimmerComponent<TitleSignature> {
   <template>
     Boxel Specification
 
-    <span class='has-boxel-spec' data-test-has-boxel-spec>
+    <div class='has-boxel-spec' data-test-has-boxel-spec>
       {{#if @showCreateBoxelSpecIntent}}
         <BoxelButton
           @kind='primary'
@@ -134,7 +134,7 @@ class BoxelSpecPreviewTitle extends GlimmerComponent<TitleSignature> {
           <SpecTag @specType={{@selectedInstance.specType}} />
         {{/if}}
       {{/if}}
-    </span>
+    </div>
 
     <style scoped>
       .has-boxel-spec {
@@ -193,12 +193,12 @@ class BoxelSpecPreviewContent extends GlimmerComponent<ContentSignature> {
 
   <template>
     {{#if @showCreateBoxelSpecIntent}}
-      <div
+      <p
         class='create-boxel-spec-intent-message'
         data-test-create-boxel-spec-intent-message
       >
         Create a Boxel Specification to be able to create new instances
-      </div>
+      </p>
     {{else}}
       <div class='boxel-spec-preview'>
         <div class='boxel-spec-selector' data-test-boxel-spec-selector>
@@ -230,6 +230,7 @@ class BoxelSpecPreviewContent extends GlimmerComponent<ContentSignature> {
 
     <style scoped>
       .create-boxel-spec-intent-message {
+        margin: 0;
         align-content: center;
         text-align: center;
         background-color: var(--boxel-200);
@@ -245,10 +246,9 @@ class BoxelSpecPreviewContent extends GlimmerComponent<ContentSignature> {
         justify-content: center;
         flex-direction: column;
         gap: var(--boxel-sp-sm);
+        padding: var(--boxel-sp-sm);
       }
       .boxel-spec-selector {
-        padding-top: var(--boxel-sp-sm);
-        padding-left: var(--boxel-sp-sm);
         min-width: 40%;
         align-self: flex-start;
       }
@@ -450,9 +450,7 @@ export class SpecTag extends GlimmerComponent<SpecTagSignature> {
     {{#if this.icon}}
       <Pill class='spec-tag-pill' ...attributes>
         <:iconLeft>
-          <div class='spec-tagicon'>
-            {{this.icon}}
-          </div>
+          {{this.icon}}
         </:iconLeft>
         <:default>
           {{@specType}}

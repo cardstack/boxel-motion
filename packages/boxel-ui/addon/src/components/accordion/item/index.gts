@@ -35,7 +35,7 @@ const AccordionItem: TemplateOnlyComponent<AccordionItemSignature> = <template>
       --accordion-item-border: var(--accordion-border);
       --accordion-item-title-font: 600 var(--boxel-font);
       --accordion-item-title-letter-spacing: var(--boxel-lsp-xs);
-      --accordion-item-title-padding: var(--boxel-sp-xs);
+      --accordion-item-title-padding: 0 var(--boxel-sp-xs);
 
       height: var(--accordion-item-closed-height);
       display: flex;
@@ -62,6 +62,7 @@ const AccordionItem: TemplateOnlyComponent<AccordionItemSignature> = <template>
       align-items: center;
       gap: var(--boxel-sp-xxs);
       padding: var(--accordion-item-title-padding);
+      min-height: var(--accordion-item-closed-height);
       font: var(--accordion-item-title-font);
       letter-spacing: var(--accordion-item-title-letter-spacing);
       background-color: transparent;
