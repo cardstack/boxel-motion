@@ -147,7 +147,6 @@ export default class Selector extends Component<Signature> {
                   class='boxel-selector__item__content'
                   role='menuitem'
                   href='#'
-                  data-boxel-selector-item-text={{selectorItem.declaration.localName}}
                   data-test-boxel-selector-item-text={{selectorItem.declaration.localName}}
                   {{on
                     'click'
