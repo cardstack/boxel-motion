@@ -366,7 +366,7 @@ module('Acceptance | Spec preview', function (hooks) {
                 module: './polymorphic-field',
               },
               specType: 'field',
-              containedExamples: [{ firstName: 'Justin' }],
+              containedExamples: [],
               description: null,
               thumbnailURL: null,
             },
@@ -378,16 +378,6 @@ module('Acceptance | Spec preview', function (hooks) {
               },
             },
             meta: {
-              fields: {
-                containedExamples: [
-                  {
-                    adoptsFrom: {
-                      module: './polymorphic-field',
-                      name: 'SubTestField',
-                    },
-                  },
-                ],
-              },
               adoptsFrom: {
                 module: `${baseRealm.url}spec`,
                 name: 'Spec',
@@ -569,31 +559,35 @@ module('Acceptance | Spec preview', function (hooks) {
       .containsText(`${testRealmURL}polymorphic-field`);
     assert.dom('[data-test-exported-name]').containsText('SubTestField');
     assert.dom('[data-test-exported-type]').containsText('field');
-    assert.dom('[data-test-edit]').exists({ count: 1 });
-    assert
-      .dom('[data-test-item="0"] [data-test-edit] [data-test-boxel-input]')
-      .hasValue('Justin');
     await click('[data-test-add-new]');
-    assert.dom('[data-test-edit]').exists({ count: 2 });
+    let firstNameToAdd = 'Tintin';
+    let classExportName = 'SubTestField';
+
     this.onSave((_, json) => {
       if (typeof json === 'string') {
         throw new Error('expected JSON save data');
       }
-      debugger;
-      assert.strictEqual(json.data.attributes?.containedExamples.length, 2);
+      assert.strictEqual(json.data.attributes?.containedExamples.length, 1);
       assert.strictEqual(
         json.data.attributes?.containedExamples[0].firstName,
-        'Justin',
+        firstNameToAdd,
       );
       assert.strictEqual(
-        json.data.attributes?.containedExamples[1].firstName,
-        'Tintin',
+        json.data.attributes?.meta.fields.containedExamples[0].adoptsFrom.name,
+        classExportName,
+      );
+      assert.strictEqual(
+        json.data.attributes?.meta.fields.containedExamples[0].adoptsFrom
+          .module,
+        `${testRealmURL}${classExportName}`,
       );
     });
     await fillIn(
-      '[data-test-item="1"] [data-test-edit] [data-test-boxel-input]',
-      'Tintin',
+      '[data-test-item="0"] [data-test-edit] [data-test-boxel-input]',
+      firstNameToAdd,
     );
+    assert.dom('[data-test-edit]').exists({ count: 1 });
+    assert.dom('[data-test-item="0"] [data-test-edit]').containsText('Edit');
     await percySnapshot(assert);
   });
 });
