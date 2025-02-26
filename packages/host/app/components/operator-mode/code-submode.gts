@@ -28,7 +28,7 @@ import { and, not, bool, eq } from '@cardstack/boxel-ui/helpers';
 import { File } from '@cardstack/boxel-ui/icons';
 
 import {
-  isCardDef,
+  isFieldDef,
   isCardDocumentString,
   hasExecutableExtension,
   RealmPaths,
@@ -464,13 +464,10 @@ export default class CodeSubmode extends Component<Signature> {
     return undefined;
   }
 
-  private get shouldDisplayPlayground() {
-    return isCardDef(this.selectedCardOrField?.cardOrField);
-  }
-
-  get showSpecPreview() {
+  get showSpecAndPlaygroundPreview() {
     return (
       !this.moduleContentsResource.isLoading &&
+      this.selectedCardOrField?.cardOrField &&
       this.selectedDeclaration?.exportName
     );
   }
@@ -957,7 +954,7 @@ export default class CodeSubmode extends Component<Signature> {
                           </:content>
                         </A.Item>
                       </SchemaEditor>
-                      {{#if this.shouldDisplayPlayground}}
+                      {{#if this.showSpecAndPlaygroundPreview}}
                         <A.Item
                           class='accordion-item'
                           @contentClass='accordion-item-content'
@@ -970,11 +967,15 @@ export default class CodeSubmode extends Component<Signature> {
                             <PlaygroundPanel
                               @moduleContentsResource={{this.moduleContentsResource}}
                               @cardType={{this.selectedCardOrField.cardType}}
+                              @fieldDef={{if
+                                (isFieldDef
+                                  this.selectedCardOrField.cardOrField
+                                )
+                                this.selectedCardOrField.cardOrField
+                              }}
                             />
                           </:content>
                         </A.Item>
-                      {{/if}}
-                      {{#if this.showSpecPreview}}
                         <SpecPreview
                           @selectedDeclaration={{this.selectedDeclaration}}
                           as |SpecPreviewTitle SpecPreviewContent|

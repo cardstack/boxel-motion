@@ -8,6 +8,7 @@ import { tracked } from '@glimmer/tracking';
 
 import Modifier from 'ember-modifier';
 
+import { Button } from '@cardstack/boxel-ui/components';
 import { eq } from '@cardstack/boxel-ui/helpers';
 
 import { Format } from 'https://cardstack.com/base/card-api';
@@ -17,6 +18,7 @@ interface Signature {
     format: Format;
     setFormat: (format: Format) => void;
     additionalClass?: string;
+    isField?: boolean;
   };
   Element: HTMLElement;
 }
@@ -29,11 +31,12 @@ export default class FormatChooser extends Component<Signature> {
       ...attributes
     >
       <div class='format-chooser__buttons {{this.footerButtonsClass}}'>
-        <button
+        <Button
           class='format-chooser__button {{if (eq @format "isolated") "active"}}'
           {{on 'click' (fn @setFormat 'isolated')}}
+          @disabled={{@isField}}
           data-test-format-chooser-isolated
-        >Isolated</button>
+        >Isolated</Button>
         <button
           class='format-chooser__button {{if (eq @format "embedded") "active"}}'
           {{on 'click' (fn @setFormat 'embedded')}}
