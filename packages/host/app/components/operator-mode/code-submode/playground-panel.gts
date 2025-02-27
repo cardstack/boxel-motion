@@ -241,66 +241,64 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
         </:response>
       </PrerenderedCardSearch>
       <div class='preview-area'>
-        {{#if this.isField}}
-          {{#if this.field}}
-            <CardContainer class='preview-container'>
-              <CardHeader
-                class='preview-header'
-                @cardTypeDisplayName={{cardTypeDisplayName this.field}}
-                @cardTypeIcon={{cardTypeIcon this.field}}
-                @realmInfo={{this.realmInfo}}
-                @onEdit={{if this.canEdit this.toggleEdit}}
-                @isTopCard={{true}}
-              />
-              <div class='field-preview-card'>
+        {{#if this.card}}
+          {{#if @fieldDef}}
+            {{#if this.field}}
+              <CardContainer class='preview-container'>
+                <CardHeader
+                  class='preview-header'
+                  @cardTypeDisplayName={{@displayName}}
+                  @cardTypeIcon={{@fieldDef.icon}}
+                  @realmInfo={{this.realmInfo}}
+                  @onEdit={{if this.canEdit this.toggleEdit}}
+                  @isTopCard={{true}}
+                />
+                <div class='field-preview-card'>
+                  <Preview @card={{this.field}} @format={{this.format}} />
+                </div>
+              </CardContainer>
+            {{/if}}
+          {{else}}
+            {{#if (or (eq this.format 'isolated') (eq this.format 'edit'))}}
+              <CardContainer class='preview-container full-height-preview'>
+                <CardHeader
+                  class='preview-header'
+                  @cardTypeDisplayName={{cardTypeDisplayName this.card}}
+                  @cardTypeIcon={{cardTypeIcon this.card}}
+                  @realmInfo={{this.realmInfo}}
+                  @onEdit={{if this.canEdit this.toggleEdit}}
+                  @isTopCard={{true}}
+                  @moreOptionsMenuItems={{this.contextMenuItems}}
+                />
                 <Preview
                   class='preview'
-                  @card={{this.field}}
+                  @card={{this.card}}
                   @format={{this.format}}
                 />
-              </div>
-            </CardContainer>
-          {{/if}}
-        {{else if this.card}}
-          {{#if (or (eq this.format 'isolated') (eq this.format 'edit'))}}
-            <CardContainer class='preview-container full-height-preview'>
-              <CardHeader
-                class='preview-header'
-                @cardTypeDisplayName={{cardTypeDisplayName this.card}}
-                @cardTypeIcon={{cardTypeIcon this.card}}
-                @realmInfo={{this.realmInfo}}
-                @onEdit={{if this.canEdit this.toggleEdit}}
-                @isTopCard={{true}}
-                @moreOptionsMenuItems={{this.contextMenuItems}}
-              />
-              <Preview
-                class='preview'
-                @card={{this.card}}
-                @format={{this.format}}
-              />
-            </CardContainer>
-          {{else if (eq this.format 'embedded')}}
-            <CardContainer class='preview-container'>
-              <Preview
-                class='preview'
-                @card={{this.card}}
-                @format={{this.format}}
-              />
-            </CardContainer>
-          {{else if (eq this.format 'atom')}}
-            <div class='atom-preview-container' data-test-atom-preview>Lorem
-              ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              <Preview
-                class='atom-preview'
-                @card={{this.card}}
-                @format={{this.format}}
-                @displayContainer={{false}}
-              />
-              tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-              minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-              aliquip ex ea commodo consequat.</div>
-          {{else if (eq this.format 'fitted')}}
-            <FittedFormatGallery @card={{this.card}} @isDarkMode={{true}} />
+              </CardContainer>
+            {{else if (eq this.format 'embedded')}}
+              <CardContainer class='preview-container'>
+                <Preview
+                  class='preview'
+                  @card={{this.card}}
+                  @format={{this.format}}
+                />
+              </CardContainer>
+            {{else if (eq this.format 'atom')}}
+              <div class='atom-preview-container' data-test-atom-preview>Lorem
+                ipsum dolor sit amet, consectetur adipiscing elit, sed do
+                <Preview
+                  class='atom-preview'
+                  @card={{this.card}}
+                  @format={{this.format}}
+                  @displayContainer={{false}}
+                />
+                tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+                minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+                aliquip ex ea commodo consequat.</div>
+            {{else if (eq this.format 'fitted')}}
+              <FittedFormatGallery @card={{this.card}} @isDarkMode={{true}} />
+            {{/if}}
           {{/if}}
         {{/if}}
       </div>
@@ -481,7 +479,11 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
   }
 
   private get field(): FieldDef | undefined {
-    if (!this.playgroundSelections[this.args.moduleId]?.isField || !this.card) {
+    if (
+      !this.args.fieldDef ||
+      !this.playgroundSelections[this.args.moduleId]?.isField ||
+      !this.card
+    ) {
       return;
     }
     // TODO: confirm spec card
@@ -587,7 +589,6 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
 
   // TODO: convert this to @action once we no longer need to await below
   private createNew = task(async () => {
-    // TODO: consider action to take for base fields that are extended locally (user does not have write permissions to base realm specs)
     let realmURL = this.operatorModeStateService.realmURL.href;
     let newFieldInstance: FieldDef | undefined;
     if (this.args.fieldDef) {
@@ -625,7 +626,8 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
   });
 
   private get canEdit() {
-    return this.card?.id && this.realm.canWrite(this.card.id);
+    return this.realm.canWrite(this.operatorModeStateService.realmURL.href);
+    // return this.card?.id && this.realm.canWrite(this.card.id);
   }
 
   @action private toggleEdit() {
