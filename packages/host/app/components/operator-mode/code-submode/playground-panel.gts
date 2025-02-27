@@ -237,10 +237,12 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
       </PrerenderedCardSearch>
       <div class='preview-area'>
         {{#if this.field}}
-          <CardContainer
-            class='preview-container full-height-preview field-preview-card'
-          >
-            <this.fieldComponent @format={{this.format}} />
+          <CardContainer class='preview-container field-preview-card'>
+            <Preview
+              class='preview'
+              @card={{this.field}}
+              @format={{this.format}}
+            />
           </CardContainer>
         {{else if this.card}}
           {{#if (or (eq this.format 'isolated') (eq this.format 'edit'))}}
@@ -481,14 +483,6 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
     return (
       this.playgroundSelections[this.args.moduleId]?.format ?? defaultFormat
     );
-  }
-
-  private get fieldComponent() {
-    if (!this.args.fieldDef || !this.field) {
-      return;
-    }
-    let component = this.args.fieldDef.getComponent(this.field);
-    return component;
   }
 
   private copyToClipboard = task(async (id: string) => {
