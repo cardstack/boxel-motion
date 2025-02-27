@@ -30,7 +30,6 @@ import {
   cardTypeDisplayName,
   cardTypeIcon,
   chooseCard,
-  getField,
   specRef,
   type Query,
   type CardCatalogQuery,
@@ -125,7 +124,7 @@ const BeforeOptions: TemplateOnlyComponent = <template>
 interface AfterOptionsSignature {
   Args: {
     chooseCard: () => void;
-    createNew: () => void;
+    createNew?: () => void;
     createNewIsRunning?: boolean;
   };
 }
@@ -134,14 +133,20 @@ const AfterOptions: TemplateOnlyComponent<AfterOptionsSignature> = <template>
     <span class='title'>
       Action
     </span>
-    <button class='action' {{on 'click' @createNew}} data-test-create-instance>
-      {{#if @createNewIsRunning}}
-        <LoadingIndicator class='action-running' />
-      {{else}}
-        <IconPlusThin width='16px' height='16px' />
-      {{/if}}
-      New card instance
-    </button>
+    {{#if @createNew}}
+      <button
+        class='action'
+        {{on 'click' @createNew}}
+        data-test-create-instance
+      >
+        {{#if @createNewIsRunning}}
+          <LoadingIndicator class='action-running' />
+        {{else}}
+          <IconPlusThin width='16px' height='16px' />
+        {{/if}}
+        New instance
+      </button>
+    {{/if}}
     <button
       class='action'
       {{on 'click' @chooseCard}}
@@ -222,7 +227,7 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
               @afterOptionsComponent={{component
                 AfterOptions
                 chooseCard=(perform this.chooseCard)
-                createNew=(perform this.createNew)
+                createNew=(if this.canEdit (perform this.createNew))
                 createNewIsRunning=this.createNew.isRunning
               }}
               data-test-instance-chooser
@@ -236,28 +241,38 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
         </:response>
       </PrerenderedCardSearch>
       <div class='preview-area'>
-        {{#if this.field}}
-          <CardContainer class='preview-container field-preview-card'>
-            <Preview
-              class='preview'
-              @card={{this.field}}
-              @format={{this.format}}
-            />
-          </CardContainer>
+        {{#if this.isField}}
+          {{#if this.field}}
+            <CardContainer class='preview-container'>
+              <CardHeader
+                class='preview-header'
+                @cardTypeDisplayName={{cardTypeDisplayName this.field}}
+                @cardTypeIcon={{cardTypeIcon this.field}}
+                @realmInfo={{this.realmInfo}}
+                @onEdit={{if this.canEdit this.toggleEdit}}
+                @isTopCard={{true}}
+              />
+              <div class='field-preview-card'>
+                <Preview
+                  class='preview'
+                  @card={{this.field}}
+                  @format={{this.format}}
+                />
+              </div>
+            </CardContainer>
+          {{/if}}
         {{else if this.card}}
           {{#if (or (eq this.format 'isolated') (eq this.format 'edit'))}}
             <CardContainer class='preview-container full-height-preview'>
-              {{#let (this.realm.info this.card.id) as |realmInfo|}}
-                <CardHeader
-                  class='preview-header'
-                  @cardTypeDisplayName={{cardTypeDisplayName this.card}}
-                  @cardTypeIcon={{cardTypeIcon this.card}}
-                  @realmInfo={{realmInfo}}
-                  @onEdit={{if this.canEdit this.setEditFormat}}
-                  @isTopCard={{true}}
-                  @moreOptionsMenuItems={{this.contextMenuItems}}
-                />
-              {{/let}}
+              <CardHeader
+                class='preview-header'
+                @cardTypeDisplayName={{cardTypeDisplayName this.card}}
+                @cardTypeIcon={{cardTypeIcon this.card}}
+                @realmInfo={{this.realmInfo}}
+                @onEdit={{if this.canEdit this.toggleEdit}}
+                @isTopCard={{true}}
+                @moreOptionsMenuItems={{this.contextMenuItems}}
+              />
               <Preview
                 class='preview'
                 @card={{this.card}}
@@ -356,7 +371,8 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
         grid-auto-rows: max-content 1fr;
       }
       .field-preview-card {
-        padding: var(--boxel-sp);
+        min-height: 10rem;
+        padding: var(--boxel-sp-lg) var(--boxel-sp);
       }
       .preview-header {
         background-color: var(--boxel-100);
@@ -476,6 +492,10 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
 
   private get isField() {
     return Boolean(this.args.fieldDef);
+  }
+
+  private get realmInfo() {
+    return this.card ? this.realm.info(this.card.id) : null;
   }
 
   private get format(): Format {
@@ -604,19 +624,16 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
   });
 
   private get canEdit() {
-    return (
-      this.format !== 'edit' &&
-      this.card?.id &&
-      this.realm.canWrite(this.card.id)
-    );
+    return this.card?.id && this.realm.canWrite(this.card.id);
   }
 
-  @action
-  private setEditFormat() {
-    if (!this.card?.id) {
-      return;
+  @action private toggleEdit() {
+    if (this.format === 'edit') {
+      let defaultFormat: Format = this.field ? 'embedded' : 'isolated';
+      this.setFormat(defaultFormat);
+    } else {
+      this.setFormat('edit');
     }
-    this.persistSelections(this.card.id, 'edit');
   }
 }
 
