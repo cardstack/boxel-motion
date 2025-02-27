@@ -587,6 +587,7 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
 
   // TODO: convert this to @action once we no longer need to await below
   private createNew = task(async () => {
+    // TODO: consider action to take for base fields that are extended locally (user does not have write permissions to base realm specs)
     let realmURL = this.operatorModeStateService.realmURL.href;
     let newFieldInstance: FieldDef | undefined;
     if (this.args.fieldDef) {
