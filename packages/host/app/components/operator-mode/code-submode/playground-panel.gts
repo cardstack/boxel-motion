@@ -290,9 +290,9 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
       {{#if this.card}}
         <FormatChooser
           class='format-chooser'
+          @formats={{if this.isField this.fieldFormats}}
           @format={{this.format}}
           @setFormat={{this.setFormat}}
-          @isField={{this.isField}}
         />
       {{/if}}
     </div>
@@ -392,6 +392,8 @@ class PlaygroundPanelContent extends Component<PlaygroundContentSignature> {
       }
     </style>
   </template>
+
+  fieldFormats: Format[] = ['embedded', 'atom', 'edit'];
 
   @service private declare cardService: CardService;
   @service private declare operatorModeStateService: OperatorModeStateService;

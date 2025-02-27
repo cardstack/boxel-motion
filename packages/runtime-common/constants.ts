@@ -1,5 +1,6 @@
 import { RealmPaths } from './paths';
 import type { ResolvedCodeRef } from './code-ref';
+import type { Format } from 'https://cardstack.com/base/card-api';
 
 export const baseRealm = new RealmPaths(new URL('https://cardstack.com/base/'));
 
@@ -38,3 +39,13 @@ export interface Permissions {
   readonly canRead: boolean;
   readonly canWrite: boolean;
 }
+
+export type { Format };
+
+export const formats: Format[] = [
+  'isolated',
+  'embedded',
+  'fitted',
+  'atom',
+  'edit',
+];
