@@ -42,7 +42,6 @@ import { getMatrixUsername } from '@cardstack/runtime-common/matrix-client';
 import {
   APP_BOXEL_CARD_FORMAT,
   APP_BOXEL_CARDFRAGMENT_MSGTYPE,
-  APP_BOXEL_COMMAND_MSGTYPE,
   APP_BOXEL_COMMAND_DEFINITIONS_MSGTYPE,
   APP_BOXEL_COMMAND_RESULT_EVENT_TYPE,
   APP_BOXEL_COMMAND_RESULT_WITH_NO_OUTPUT_MSGTYPE,
@@ -52,6 +51,7 @@ import {
   APP_BOXEL_REALMS_EVENT_TYPE,
   APP_BOXEL_ACTIVE_LLM,
   DEFAULT_LLM_LIST,
+  APP_BOXEL_COMMAND_REQUESTS_KEY,
 } from '@cardstack/runtime-common/matrix-constants';
 
 import {
@@ -489,7 +489,7 @@ export default class MatrixService extends Service {
     let activeRealms = this.realmServer.availableRealmURLs;
 
     await Promise.all(
-      activeRealms.map(async (realmURL) => {
+      activeRealms.map(async (realmURL: string) => {
         try {
           // Our authorization-middleware can login automatically after seeing a
           // 401, but this preemptive login makes it possible to see
@@ -536,6 +536,7 @@ export default class MatrixService extends Service {
   async sendCommandResultEvent(
     roomId: string,
     invokedToolFromEventId: string,
+    toolCallId: string,
     resultCard?: CardDef,
   ) {
     let resultCardEventId: string | undefined;
@@ -548,6 +549,9 @@ export default class MatrixService extends Service {
     if (resultCardEventId === undefined) {
       content = {
         msgtype: APP_BOXEL_COMMAND_RESULT_WITH_NO_OUTPUT_MSGTYPE,
+        data: {
+          commandRequestId: toolCallId,
+        },
         'm.relates_to': {
           event_id: invokedToolFromEventId,
           key: 'applied',
@@ -564,6 +568,7 @@ export default class MatrixService extends Service {
         },
         data: {
           cardEventId: resultCardEventId,
+          commandRequestId: toolCallId,
         },
       };
     }
@@ -668,9 +673,9 @@ export default class MatrixService extends Service {
         if (eventId === undefined) {
           let responses = await this.sendCardFragments(roomId, card);
           eventId = responses[0].event_id; // we only care about the first fragment
-          cardHashes.set(this.generateCardHashKey(roomId, card), eventId);
+          cardHashes.set(this.generateCardHashKey(roomId, card), eventId!);
         }
-        eventIds.push(eventId);
+        eventIds.push(eventId!);
       }
     }
     return eventIds;
@@ -1428,9 +1433,9 @@ export default class MatrixService extends Service {
 
     if (
       event.type === 'm.room.message' &&
-      event.content?.msgtype === APP_BOXEL_COMMAND_MSGTYPE
+      event.content?.[APP_BOXEL_COMMAND_REQUESTS_KEY]?.length
     ) {
-      this.commandService.executeCommandEventIfNeeded(event);
+      this.commandService.executeCommandEventIfNeeded(event); // TODO: multiple commands
     }
 
     if (room.oldState.paginationToken != null) {
