@@ -19,6 +19,7 @@ import FromElseWhere from 'ember-elsewhere/components/from-elsewhere';
 import { provide } from 'ember-provide-consume-context';
 import window from 'ember-window-mock';
 
+import { Position } from 'monaco-editor';
 import { TrackedObject } from 'tracked-built-ins';
 
 import { Accordion } from '@cardstack/boxel-ui/components';
@@ -743,6 +744,27 @@ export default class CodeSubmode extends Component<Signature> {
       : this.itemToDelete.id;
   }
 
+  onCursorPositionChange = restartableTask(async (cursorPosition: Position) => {
+    // Debounce saving the last cursor position to prevent excessive updates
+    await timeout(500);
+    if (!this.codePath) {
+      return;
+    }
+    this.recentFilesService.addRecentFileUrl(
+      this.codePath.toString(),
+      cursorPosition
+        ? { line: cursorPosition.lineNumber, column: cursorPosition.column }
+        : undefined,
+    );
+  });
+
+  get initialCursorPosition() {
+    let index = this.recentFilesService.recentFiles.findIndex(
+      (r) => r.filePath === this.codePath?.toString(),
+    );
+    return this.recentFilesService.recentFiles[index]?.cursorPosition;
+  }
+
   <template>
     <AttachFileModal />
     {{#let (this.realm.info this.realmURL.href) as |realmInfo|}}
@@ -863,6 +885,10 @@ export default class CodeSubmode extends Component<Signature> {
                     @onFileSave={{this.onSourceFileSave}}
                     @onSetup={{this.setupCodeEditor}}
                     @isReadOnly={{this.isReadOnly}}
+                    @onCursorPositionChange={{perform
+                      this.onCursorPositionChange
+                    }}
+                    @initialCursorPosition={{this.initialCursorPosition}}
                   />
 
                   <CodeSubmodeEditorIndicator
