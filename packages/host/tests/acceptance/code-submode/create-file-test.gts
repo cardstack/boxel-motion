@@ -10,7 +10,6 @@ import {
   testRealmURL,
   setupOnSave,
   setupAcceptanceTestRealm,
-  setupServerSentEvents,
   waitForCodeEditor,
   getMonacoContent,
   visitOperatorMode as _visitOperatorMode,
@@ -199,7 +198,6 @@ module('Acceptance | code submode | create-file tests', function (hooks) {
 
   setupApplicationTest(hooks);
   setupLocalIndexing(hooks);
-  setupServerSentEvents(hooks);
   setupOnSave(hooks);
   let { setRealmPermissions, createAndJoinRoom } = setupMockMatrix(hooks, {
     loggedInAs: '@testuser:localhost',
@@ -215,7 +213,10 @@ module('Acceptance | code submode | create-file tests', function (hooks) {
       contents: files,
     }));
 
-    matrixRoomId = createAndJoinRoom('@testuser:localhost', 'room-test');
+    matrixRoomId = createAndJoinRoom({
+      sender: '@testuser:localhost',
+      name: 'room-test',
+    });
     setupUserSubscription(matrixRoomId);
 
     lookupNetworkService().mount(
