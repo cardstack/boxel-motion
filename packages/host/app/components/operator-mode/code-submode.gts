@@ -489,7 +489,22 @@ export default class CodeSubmode extends Component<Signature> {
   }
 
   @action
-  goToDefinition(
+  private goToDefinitionAndResetCursorPosition(
+    codeRef: ResolvedCodeRef | undefined,
+    localName: string | undefined,
+  ) {
+    this.goToDefinition(codeRef, localName);
+    if (this.codePath) {
+      let urlString = this.codePath.toString();
+      this.recentFilesService.updateCursorPositionByURL(
+        urlString.endsWith('gts') ? urlString : `${urlString}.gts`,
+        undefined,
+      );
+    }
+  }
+
+  @action
+  private goToDefinition(
     codeRef: ResolvedCodeRef | undefined,
     localName: string | undefined,
   ) {
@@ -808,7 +823,7 @@ export default class CodeSubmode extends Component<Signature> {
                           @selectedDeclaration={{this.selectedDeclaration}}
                           @selectDeclaration={{this.selectDeclaration}}
                           @delete={{this.setItemToDelete}}
-                          @goToDefinition={{this.goToDefinition}}
+                          @goToDefinition={{this.goToDefinitionAndResetCursorPosition}}
                           @createFile={{perform this.createFile}}
                           @openSearch={{search.openSearchToResults}}
                         />
@@ -932,7 +947,7 @@ export default class CodeSubmode extends Component<Signature> {
                         @moduleContentsResource={{this.moduleContentsResource}}
                         @card={{this.selectedCardOrField.cardOrField}}
                         @cardTypeResource={{this.selectedCardOrField.cardType}}
-                        @goToDefinition={{this.goToDefinition}}
+                        @goToDefinition={{this.goToDefinitionAndResetCursorPosition}}
                         @isReadOnly={{this.isReadOnly}}
                         as |SchemaEditorTitle SchemaEditorPanel|
                       >
