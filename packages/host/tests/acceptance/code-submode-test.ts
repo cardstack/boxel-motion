@@ -428,7 +428,10 @@ module('Acceptance | code submode tests', function (_hooks) {
     }
 
     hooks.beforeEach(async function () {
-      matrixRoomId = createAndJoinRoom('@testuser:localhost', 'room-test');
+      matrixRoomId = createAndJoinRoom({
+        sender: '@testuser:localhost',
+        name: 'room-test',
+      });
       setupUserSubscription(matrixRoomId);
 
       let realmServerService = this.owner.lookup(
@@ -527,13 +530,16 @@ module('Acceptance | code submode tests', function (_hooks) {
     setupApplicationTest(hooks);
     setupLocalIndexing(hooks);
     setupServerSentEvents(hooks);
-    let { setActiveRealms, createAndJoinRoom } = setupMockMatrix(hooks, {
+    let { createAndJoinRoom } = setupMockMatrix(hooks, {
       loggedInAs: '@testuser:localhost',
       activeRealms: [testRealmURL],
     });
 
     hooks.beforeEach(async function () {
-      matrixRoomId = createAndJoinRoom('@testuser:localhost', 'room-test');
+      matrixRoomId = createAndJoinRoom({
+        sender: '@testuser:localhost',
+        name: 'room-test',
+      });
       setupUserSubscription(matrixRoomId);
 
       monacoService = this.owner.lookup(
@@ -1608,10 +1614,11 @@ module('Acceptance | code submode tests', function (_hooks) {
           );
         },
       });
-      await waitUntil(() =>
-        document
-          .querySelector('[data-test-code-mode-card-preview-body]')
-          ?.textContent?.includes('FadhlanXXX'),
+      await waitUntil(
+        () =>
+          document
+            .querySelector('[data-test-code-mode-card-preview-body]')
+            ?.textContent?.includes('FadhlanXXX'),
       );
       assert
         .dom('[data-test-code-mode-card-preview-body]')
