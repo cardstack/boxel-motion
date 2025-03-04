@@ -234,7 +234,10 @@ module('Acceptance | code submode | schema editor tests', function (hooks) {
   });
 
   hooks.beforeEach(async function () {
-    matrixRoomId = createAndJoinRoom('@testuser:localhost', 'room-test');
+    matrixRoomId = createAndJoinRoom({
+      sender: '@testuser:localhost',
+      name: 'room-test',
+    });
     setupUserSubscription(matrixRoomId);
 
     // this seeds the loader used during index which obtains url mappings
@@ -589,10 +592,11 @@ module('Acceptance | code submode | schema editor tests', function (hooks) {
     await click('[data-test-card-catalog-go-button]');
     // There is some additional thing we are waiting on here, probably the
     // card to load in the card resource, but I'm not too sure so using waitUntil instead
-    await waitUntil(() =>
-      document
-        .querySelector('[data-test-selected-type-display-name]')
-        ?.textContent?.includes('BigInteger'),
+    await waitUntil(
+      () =>
+        document
+          .querySelector('[data-test-selected-type-display-name]')
+          ?.textContent?.includes('BigInteger'),
     );
 
     await assert
@@ -614,10 +618,11 @@ module('Acceptance | code submode | schema editor tests', function (hooks) {
     await click('[data-test-card-catalog-go-button]');
     // There is some additional thing we are waiting on here, probably the
     // card to load in the card resource, but I'm not too sure so using waitUntil instead
-    await waitUntil(() =>
-      document
-        .querySelector('[data-test-selected-type-display-name]')
-        ?.textContent?.includes('Date'),
+    await waitUntil(
+      () =>
+        document
+          .querySelector('[data-test-selected-type-display-name]')
+          ?.textContent?.includes('Date'),
     );
 
     await assert.dom('[data-test-selected-type-display-name]').hasText('Date');
