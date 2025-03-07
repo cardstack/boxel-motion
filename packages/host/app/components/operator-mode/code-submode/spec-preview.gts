@@ -31,6 +31,7 @@ import {
   specRef,
   isCardDef,
   isFieldDef,
+  internalKeyFor,
 } from '@cardstack/runtime-common';
 
 import {
@@ -55,6 +56,8 @@ import type EnvironmentService from '@cardstack/host/services/environment-servic
 import OperatorModeStateService from '@cardstack/host/services/operator-mode-state-service';
 import RealmService from '@cardstack/host/services/realm';
 import type RealmServerService from '@cardstack/host/services/realm-server';
+
+import { PlaygroundSelections } from '@cardstack/host/utils/local-storage-keys';
 
 import { Spec, type SpecType } from 'https://cardstack.com/base/spec';
 
@@ -425,6 +428,7 @@ export default class SpecPreview extends GlimmerComponent<Signature> {
       await this.cardResource.loaded;
       if (this.card) {
         this._selectedCardId = this.card.id;
+        this.updateFieldSpecForPlayground(this.card.id);
         this.newCardJSON = undefined;
       }
     },
@@ -521,6 +525,7 @@ export default class SpecPreview extends GlimmerComponent<Signature> {
 
   @action onSelectCard(cardId: string): void {
     this._selectedCardId = cardId;
+    this.updateFieldSpecForPlayground(cardId);
   }
 
   get canWrite() {
@@ -548,6 +553,42 @@ export default class SpecPreview extends GlimmerComponent<Signature> {
 
   getSpecIntent = (cards: PrerenderedCard[]) => {
     return cards.length === 0 && this.canWrite;
+  };
+
+  // When previewing a field spec, changing the spec in Spec panel should
+  // change the selected spec in Playground panel
+  private updateFieldSpecForPlayground = (id: string) => {
+    if (
+      !this.args.selectedDeclaration?.exportName ||
+      this.guessSpecType(this.args.selectedDeclaration) !== 'field'
+    ) {
+      return;
+    }
+    let moduleId = internalKeyFor(
+      this.getSelectedDeclarationAsCodeRef,
+      undefined,
+    );
+    let selections = window.localStorage.getItem(PlaygroundSelections);
+    let playgroundSelections = selections?.length ? JSON.parse(selections) : {};
+    let item = playgroundSelections[moduleId];
+    if (!item) {
+      playgroundSelections[moduleId] = {
+        cardId: id,
+        format: 'embedded',
+        fieldIndex: 0,
+      };
+    } else {
+      if (item.cardId === id) {
+        return;
+      }
+      item.cardId = id;
+      item.format = 'embedded';
+      item.fieldIndex = 0;
+    }
+    window.localStorage.setItem(
+      PlaygroundSelections,
+      JSON.stringify(playgroundSelections),
+    );
   };
 
   <template>
