@@ -36,7 +36,6 @@ import type OperatorModeStateService from '@cardstack/host/services/operator-mod
 
 import {
   setupLocalIndexing,
-  setupServerSentEvents,
   setupOnSave,
   testRealmURL,
   setupAcceptanceTestRealm,
@@ -64,13 +63,15 @@ let matrixRoomId = '';
 module('Acceptance | Commands tests', function (hooks) {
   setupApplicationTest(hooks);
   setupLocalIndexing(hooks);
-  setupServerSentEvents(hooks);
   setupOnSave(hooks);
+
+  let mockMatrixUtils = setupMockMatrix(hooks, {
+    loggedInAs: '@testuser:localhost',
+    activeRealms: [baseRealm.url, testRealmURL],
+  });
+
   let { simulateRemoteMessage, getRoomIds, getRoomEvents, createAndJoinRoom } =
-    setupMockMatrix(hooks, {
-      loggedInAs: '@testuser:localhost',
-      activeRealms: [baseRealm.url, testRealmURL],
-    });
+    mockMatrixUtils;
 
   setupBaseRealm(hooks);
 
@@ -356,6 +357,7 @@ module('Acceptance | Commands tests', function (hooks) {
     let mangoPet = new Pet({ name: 'Mango' });
 
     await setupAcceptanceTestRealm({
+      mockMatrixUtils,
       contents: {
         'person.gts': { Person, Meeting },
         'pet.gts': { Pet },
